@@ -1,0 +1,37 @@
+# Build and test every pull request (including Dependabot's) and every push to main.
+# Publishing stays in release.yml, which is tag-driven and holds the id-token; this job holds
+# nothing and needs nothing.
+
+name: Build and Test
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+# Pushing again to a pull request makes the in-flight run pointless.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # The job id is the status-check name GitHub reports ("build"). If branch protection ever
+  # requires it, renaming this key makes the required check silently never arrive.
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+    - name: Checkout
+      # Pinned to a commit SHA rather than a tag: a tag can be repointed. The comment records the
+      # human-readable version, and Dependabot keeps both up to date.
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+    - name: Build
+      # No setup-dotnet step: the runner's preinstalled (newer) SDK still builds this older target.
+      #
+      # No /warnaserror yet: the build currently carries warnings (including NU190x advisories on
+      # pinned packages), and gating on them would make every Dependabot PR red from day one.
+      run: dotnet build QrCodeGenerator.sln --configuration Release
+    # No Test step: this repository has no test project, so a clean build is the check.

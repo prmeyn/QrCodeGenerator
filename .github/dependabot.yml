@@ -1,0 +1,48 @@
+# Dependabot version updates, modelled on the SMSwitch configuration.
+#
+# Every entry ignores semver-major updates: a major bump is a deliberate, reviewed act, not
+# something that arrives while nobody is looking. Security updates are not affected by these
+# ignore rules and still arrive for any version that fixes an advisory.
+version: 2
+
+updates:
+  - package-ecosystem: "nuget"
+    # The single project sits at the repository root next to its solution, so the root is the one
+    # directory to scan.
+    directories:
+      - "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+    # The catch-all "*" group must stay last, or it claims everything.
+    groups:
+      microsoft:
+        patterns:
+          - "Microsoft.*"
+          - "System.*"
+      third-party:
+        patterns:
+          - "*"
+
+  - package-ecosystem: "docker"
+    # Base images in the root Dockerfile. Majors are held like everything else, so this stays on
+    # the .NET 7 images until the project itself is retargeted.
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+
+  - package-ecosystem: "github-actions"
+    # Always the repo root; Dependabot reads .github/workflows from there.
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
